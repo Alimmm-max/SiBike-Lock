@@ -1,0 +1,581 @@
+
+/* =====================================
+   1. PENGATURAN DASAR
+===================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+
+    background: linear-gradient(
+        145deg,
+        #001b43 0%,
+        #080044 45%,
+        #a00070 100%
+    );
+
+    color: white;
+}
+
+.container {
+    width: 100%;
+    min-height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    padding: 75px 20px 40px;
+}
+
+
+/* =====================================
+   2. LOGO SIBIKE LOCK
+===================================== */
+
+.logo {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.logo-icon {
+    width: 180px;
+    height: 100px;
+    margin: auto;
+}
+
+.logo-icon svg {
+    width: 100%;
+    height: 100%;
+
+    fill: none;
+    stroke: #0876bd;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.logo-icon .lock-shackle {
+    stroke: #0876bd;
+    stroke-width: 5;
+}
+
+.logo-icon .lock-body {
+    fill: #0876bd;
+    stroke: #0876bd;
+}
+
+.logo-icon .lock-hole {
+    fill: #001b43;
+    stroke: #001b43;
+}
+
+.logo-icon .signal {
+    stroke: #00d9b5;
+    stroke-width: 4;
+}
+
+.logo-icon .signal-dot {
+    fill: #00d9b5;
+    stroke: #00d9b5;
+}
+
+.logo h2 {
+    font-size: 30px;
+    color: #073e82;
+    letter-spacing: 1px;
+}
+
+.logo h2 span {
+    color: #00a6d9;
+}
+
+.tagline {
+    color: #00b7dc;
+    font-size: 9px;
+    letter-spacing: 3px;
+    margin-top: 3px;
+}
+
+.logo-line {
+    width: 190px;
+    height: 2px;
+    background: #00a6d9;
+    margin: 8px auto 0;
+}
+
+
+/* =====================================
+   3. HALAMAN UTAMA
+===================================== */
+
+.welcome {
+    text-align: center;
+}
+
+.welcome h1 {
+    font-size: 43px;
+    line-height: 1.08;
+    font-weight: bold;
+}
+
+.welcome h1 i {
+    font-style: italic;
+}
+
+.welcome p {
+    font-size: 13px;
+    margin-top: 18px;
+}
+
+.menu {
+    width: 100%;
+    max-width: 320px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    margin-top: 72px;
+}
+
+.menu-button {
+    width: 100%;
+    padding: 15px 10px;
+
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+
+    background: rgba(255, 255, 255, 0.38);
+    border-radius: 20px;
+
+    transition: 0.3s;
+}
+
+.menu-button:hover {
+    background: rgba(255, 255, 255, 0.55);
+    transform: scale(1.03);
+}
+
+
+/* =====================================
+   4. HALAMAN CEK ID
+===================================== */
+
+.cekid-heading {
+    text-align: center;
+}
+
+.cekid-heading h1 {
+    font-size: 43px;
+    line-height: 1.08;
+}
+
+.cekid-heading p {
+    font-size: 13px;
+    margin-top: 18px;
+}
+
+.cekid-form {
+    width: 100%;
+    max-width: 260px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    margin-top: 72px;
+}
+
+.cekid-form input,
+.cekid-form button {
+    width: 100%;
+    height: 49px;
+
+    border: none;
+    border-radius: 20px;
+
+    background: rgba(255, 255, 255, 0.38);
+
+    color: white;
+    font-size: 16px;
+    text-align: center;
+}
+
+.cekid-form input {
+    outline: none;
+}
+
+.cekid-form input::placeholder {
+    color: white;
+    opacity: 1;
+}
+
+.cekid-form button {
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.cekid-form button:hover {
+    background: rgba(255, 255, 255, 0.55);
+}
+
+#errorMessage {
+    color: #ffb6c1;
+    font-size: 12px;
+    text-align: center;
+    min-height: 15px;
+}
+
+
+/* =====================================
+   5. HALAMAN STATUS PARKIR
+===================================== */
+
+.status-heading {
+    text-align: center;
+}
+
+.status-heading h1 {
+    font-size: 43px;
+    line-height: 1.08;
+}
+
+.status-heading p {
+    font-size: 13px;
+    margin-top: 18px;
+}
+
+.status-grid {
+    width: 100%;
+    max-width: 320px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    margin-top: 72px;
+}
+
+.status-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.status-label,
+.status-value {
+    min-height: 49px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(255, 255, 255, 0.38);
+    border-radius: 20px;
+
+    color: white;
+    font-size: 16px;
+    text-align: center;
+}
+
+.status-message {
+    margin-top: 20px;
+    font-size: 13px;
+    text-align: center;
+}
+
+
+/* =====================================
+   6. KETERSEDIAAN SLOT
+===================================== */
+
+.availability-heading {
+    text-align: center;
+}
+
+.availability-heading h1 {
+    font-size: 43px;
+    line-height: 1.08;
+}
+
+.availability-heading p {
+    font-size: 13px;
+    margin-top: 18px;
+}
+
+.slot-list {
+    width: 100%;
+    max-width: 320px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    margin-top: 72px;
+}
+
+.slot-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 13px;
+}
+
+.slot-number,
+.slot-status {
+    min-height: 49px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 20px;
+
+    color: white;
+    font-size: 16px;
+    text-align: center;
+}
+
+.slot-number,
+.slot-status.empty {
+    background: rgba(255, 255, 255, 0.38);
+}
+
+.slot-status.booked {
+    background: rgba(255, 190, 70, 0.55);
+}
+
+.slot-status.occupied {
+    background: rgba(230, 75, 90, 0.55);
+}
+
+.booking-button {
+    width: 100%;
+    max-width: 290px;
+    min-height: 55px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin-top: 100px;
+
+    border: 2px solid white;
+    border-radius: 20px;
+
+    background: transparent;
+
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+
+    transition: 0.3s;
+}
+
+.booking-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+
+/* =====================================
+   7. BOOKING SLOT
+===================================== */
+
+.booking-container {
+    padding-top: 75px;
+}
+
+.booking-heading {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.booking-heading h1 {
+    font-size: 43px;
+    line-height: 1.1;
+}
+
+.booking-heading p {
+    font-size: 13px;
+    margin-top: 35px;
+}
+
+.available-slots {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+
+    margin-top: 72px;
+}
+
+.available-slot-button {
+    min-width: 79px;
+    min-height: 49px;
+
+    padding: 12px 20px;
+
+    border: none;
+    border-radius: 20px;
+
+    background: rgba(255, 255, 255, 0.38);
+
+    color: white;
+    font-size: 16px;
+
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.available-slot-button:hover {
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(1.05);
+}
+
+.booking-result {
+    margin-top: 25px;
+    font-size: 13px;
+    color: #00d9b5;
+    text-align: center;
+    min-height: 20px;
+}
+
+.no-available-slot {
+    max-width: 280px;
+    font-size: 14px;
+    line-height: 1.6;
+    text-align: center;
+}
+
+
+/* =====================================
+   8. BOOKING BERHASIL
+===================================== */
+
+.success-container {
+    padding-top: 75px;
+}
+
+.success-heading {
+    text-align: center;
+}
+
+.success-heading h1 {
+    font-size: 43px;
+    line-height: 1.08;
+}
+
+.success-heading p {
+    max-width: 290px;
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 14px auto 0;
+}
+
+.success-grid {
+    width: 100%;
+    max-width: 320px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    margin-top: 54px;
+}
+
+.success-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 13px;
+}
+
+.success-label,
+.success-value {
+    min-height: 49px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(255, 255, 255, 0.38);
+    border-radius: 20px;
+
+    color: white;
+    font-size: 16px;
+    text-align: center;
+}
+
+.success-message {
+    margin-top: 20px;
+    font-size: 13px;
+    text-align: center;
+    color: #00d9b5;
+}
+
+
+/* =====================================
+   9. TOMBOL KEMBALI
+===================================== */
+
+.back-button {
+    display: inline-block;
+
+    margin-top: 25px;
+    padding: 12px 20px;
+
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 15px;
+
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+
+    transition: 0.3s;
+}
+
+.back-button:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+
+/* =====================================
+   10. RESPONSIVE DESIGN
+===================================== */
+
+@media (max-width: 480px) {
+
+    .container {
+        padding-top: 75px;
+    }
+
+    .welcome h1,
+    .cekid-heading h1,
+    .status-heading h1,
+    .availability-heading h1,
+    .booking-heading h1,
+    .success-heading h1 {
+        font-size: 43px;
+    }
+
+    .menu,
+    .status-grid,
+    .slot-list,
+    .success-grid {
+        max-width: 320px;
+    }
+
+    .booking-button {
+        max-width: 290px;
+    }
+
+}
