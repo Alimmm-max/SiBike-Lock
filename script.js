@@ -1,4 +1,3 @@
-
 /* =====================================
    1. PENGATURAN FIREBASE
 ===================================== */
@@ -195,7 +194,7 @@ function updateStatus() {
     } else if (slot.status === "terisi") {
         lockStatus.textContent = "Terisi";
 
-        const time = slot.parkedAt || slot.bookingTime;
+        const time = slot.parkeadAt || slot.bookingTime;
 
         entryTime.textContent = time
             ? new Date(time).toLocaleTimeString("id-ID", {
@@ -312,11 +311,17 @@ function displayAvailableSlots() {
    8. PROSES BOOKING SLOT
 ===================================== */
 
+
 async function bookSelectedSlot(id) {
     if (!firebaseReady || bookingInProgress) return;
 
     if (Number(id) !== 1) {
         alert("Saat ini hanya Slot 1 yang tersedia.");
+        return;
+    }
+
+    if (!auth.currentUser) {
+        alert("Akun Firebase belum siap. Coba lagi.");
         return;
     }
 
@@ -338,7 +343,7 @@ async function bookSelectedSlot(id) {
                 const slots = normalizeSlots(currentData);
                 const now = Date.now();
 
-                // Menghapus booking kedaluwarsa.
+                // Lepaskan booking yang sudah kedaluwarsa.
                 slots.forEach(slot => {
                     if (
                         slot.status === "booked" &&
@@ -354,12 +359,6 @@ async function bookSelectedSlot(id) {
                     }
                 });
 
-                // Menghapus data ID pengguna lama.
-                slots.forEach(slot => {
-                    delete slot.userID;
-                });
-
-                // Memeriksa slot pilihan.
                 const selected = slots.find(
                     slot => Number(slot.id) === Number(id)
                 );
@@ -367,17 +366,18 @@ async function bookSelectedSlot(id) {
                 if (!selected || selected.status !== "kosong") {
                     failureReason =
                         "Maaf, Slot 1 sudah tidak tersedia!";
-
                     return;
                 }
 
-                // Membuat PIN otomatis.
                 const pin = generatePIN(slots);
 
                 selected.status = "booked";
                 selected.pin = pin;
                 selected.bookingTime = now;
                 selected.expiresAt = now + BOOKING_DURATION;
+
+                // Simpan UID perangkat pemesan.
+                selected.userID = auth.currentUser.uid;
 
                 return slots;
             }
@@ -388,7 +388,6 @@ async function bookSelectedSlot(id) {
                 failureReason ||
                 "Booking gagal. Silakan coba lagi."
             );
-
             return;
         }
 
@@ -402,10 +401,7 @@ async function bookSelectedSlot(id) {
         );
 
         if (!committedBooking) {
-            alert(
-                "Booking belum berhasil. Silakan periksa kembali slot."
-            );
-
+            alert("Booking belum berhasil. Silakan periksa kembali slot.");
             return;
         }
 
@@ -427,6 +423,7 @@ async function bookSelectedSlot(id) {
         bookingInProgress = false;
     }
 }
+
 
 
 /* =====================================
@@ -579,31 +576,25 @@ function refreshPage() {
    12. MEMANTAU PERINGATAN SENSOR
 ===================================== */
 
+
+
 function listenForAlerts() {
     onValue(
         alertsRef,
-
         snapshot => {
-            // Saat pertama kali terhubung, catat
-            // semua peringatan lama agar tidak dikirim ulang.
-
             if (!alertsInitialized) {
                 snapshot.forEach(child => {
                     knownAlertIds.add(child.key);
                 });
 
                 alertsInitialized = true;
-
                 console.log("Pemantauan peringatan sensor aktif.");
-
                 return;
             }
 
-            // Memeriksa peringatan baru dari ESP32.
             snapshot.forEach(child => {
                 const alertId = child.key;
 
-                // Abaikan peringatan yang sudah pernah diproses.
                 if (knownAlertIds.has(alertId)) {
                     return;
                 }
@@ -615,9 +606,33 @@ function listenForAlerts() {
                 const message = alertData?.message ||
                     "Terdeteksi getaran mencurigakan pada sepeda!";
 
+                // Periksa booking aktif pada Slot 1.
+                const activeBooking = slotsCache.find(slot =>
+                    Number(slot.id) === 1 &&
+                    (
+                        (
+                            slot.status === "booked" &&
+                            Number(slot.expiresAt) > Date.now()
+                        ) ||
+                        slot.status === "terisi"
+                    )
+                );
+
+                // Pastikan perangkat merupakan pemilik booking.
+                const isBookingOwner =
+                    activeBooking &&
+                    auth.currentUser &&
+                    activeBooking.userID === auth.currentUser.uid;
+
+                if (!isBookingOwner) {
+                    console.log(
+                        "Peringatan diabaikan: perangkat bukan pemilik booking aktif."
+                    );
+                    return;
+                }
+
                 console.log("Peringatan baru:", message);
 
-                // Menampilkan notifikasi browser.
                 if (
                     "Notification" in window &&
                     Notification.permission === "granted"
@@ -634,15 +649,9 @@ function listenForAlerts() {
                         window.focus();
                         notification.close();
                     };
-
-                } else {
-                    console.warn(
-                        "Izin notifikasi browser belum diberikan."
-                    );
                 }
             });
         },
-
         error => {
             console.error(
                 "Gagal memantau peringatan sensor:",
@@ -651,6 +660,8 @@ function listenForAlerts() {
         }
     );
 }
+
+
 
 
 /* =====================================
