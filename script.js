@@ -1,4 +1,3 @@
-
 /* =====================================
    1. PENGATURAN FIREBASE
 ===================================== */
@@ -11,10 +10,17 @@ import {
 } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
 
 import {
+    getMessaging,
+    getToken,
+    isSupported
+} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-messaging.js";
+
+import {
     getDatabase,
     ref,
     runTransaction,
-    onValue
+    onValue,
+   set
 } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-database.js";
 
 
@@ -725,3 +731,58 @@ async function startApp() {
 ===================================== */
 
 startApp();
+
+// =====================================
+// 14. MENGAKTIFKAN NOTIFIKASI
+// =====================================
+
+async function enableNotifications() {
+    try {
+        if (!(await isSupported())) {
+            alert("Browser tidak mendukung notifikasi Firebase.");
+            return;
+        }
+
+        if (!auth.currentUser) {
+            alert("Firebase masih menghubungkan akun. Coba lagi sebentar.");
+            return;
+        }
+
+        const permission = await Notification.requestPermission();
+
+        if (permission !== "granted") {
+            alert("Izin notifikasi belum diberikan.");
+            return;
+        }
+
+        const registration = await navigator.serviceWorker.register(
+            "./firebase-messaging-sw.js"
+        );
+
+        const messaging = getMessaging(app);
+
+        const token = await getToken(messaging, {
+            vapidKey: "BIhPyRw1NcSEBTt6qbpp22FVD_estPPAA0MlvLn5YVSIdRv7SWbLS6AfBuhTJCg45m-cepN6Ut0i3GEVxKN9VZQ",
+            serviceWorkerRegistration: registration
+        });
+
+        if (!token) {
+            throw new Error("Token notifikasi gagal dibuat.");
+        }
+
+        await set(ref(db, `notificationTokens/${auth.currentUser.uid}`), {
+            token: token,
+            createdAt: Date.now()
+        });
+
+        alert("Notifikasi berhasil diaktifkan!");
+
+    } catch (error) {
+        console.error("Gagal mengaktifkan notifikasi:", error);
+        alert("Gagal mengaktifkan notifikasi: " + error.message);
+    }
+}
+
+// Menghubungkan tombol notifikasi
+document.getElementById("notificationButton")
+    ?.addEventListener("click", enableNotifications);
