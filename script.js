@@ -51,12 +51,10 @@ function createInitialSlots() {
     const slots = [];
 
     for (let i = 1; i <= TOTAL_SLOTS; i++) {
-
         slots.push({
             id: i,
             status: "kosong"
         });
-
     }
 
     return slots;
@@ -88,14 +86,11 @@ function normalizeSlots(data) {
         );
 
         if (!exists) {
-
             slots.push({
                 id: i,
                 status: "kosong"
             });
-
         }
-
     }
 
     return slots.sort(
@@ -105,9 +100,7 @@ function normalizeSlots(data) {
 
 
 function getSlots() {
-
     return slotsCache.map(slot => ({ ...slot }));
-
 }
 
 
@@ -126,12 +119,10 @@ function generatePIN(slots) {
         );
 
     } while (
-
         slots.some(slot =>
             slot.pin === pin &&
             slot.status === "booked"
         )
-
     );
 
     return pin;
@@ -139,32 +130,14 @@ function generatePIN(slots) {
 
 
 /* =====================================
-   4. CEK ID PENGGUNA
+   4. NAVIGASI HALAMAN STATUS
 ===================================== */
 
+// Kompatibilitas dengan tombol HTML lama.
+// Tidak meminta ID pengguna lagi.
+
 function checkID() {
-
-    const input = document.getElementById("userID");
-    const error = document.getElementById("errorMessage");
-
-    if (!input || !error) {
-        return false;
-    }
-
-    const id = input.value.trim();
-
-    if (id === "") {
-
-        error.textContent =
-            "Masukkan ID terlebih dahulu!";
-
-        return false;
-    }
-
-    sessionStorage.setItem("userID", id);
-
     window.location.href = "status.html";
-
     return false;
 }
 
@@ -172,7 +145,7 @@ window.checkID = checkID;
 
 
 /* =====================================
-   5. STATUS PARKIR PENGGUNA
+   5. STATUS PARKIR
 ===================================== */
 
 function updateStatus() {
@@ -181,66 +154,63 @@ function updateStatus() {
 
     if (!element || !firebaseReady) return;
 
-    const userID = sessionStorage.getItem("userID");
     const slots = getSlots();
+    const slot = slots.find(s => Number(s.id) === 1);
 
     const lockStatus = document.getElementById("lockStatus");
     const entryTime = document.getElementById("entryTime");
     const securityStatus = document.getElementById("securityStatus");
     const message = document.getElementById("statusMessage");
 
-    const userSlot = slots.find(slot =>
-        slot.userID === userID &&
-        (
-            slot.status === "booked" ||
-            slot.status === "terisi"
-        )
-    );
+    if (!slot) return;
 
-    if (!userID) {
+    element.textContent = slot.id;
 
-        message.textContent =
-            "Silakan masukkan ID terlebih dahulu.";
+    if (slot.status === "kosong") {
 
-        return;
-    }
-
-    if (!userSlot) {
-
-        element.textContent = "-";
-        lockStatus.textContent = "Tidak ada";
+        lockStatus.textContent = "Kosong";
         entryTime.textContent = "--:--";
         securityStatus.textContent = "-";
 
-        message.textContent =
-            "Anda belum memiliki booking aktif.";
+        message.textContent = "Slot 1 belum digunakan.";
 
-        return;
+    } else if (slot.status === "booked") {
+
+        lockStatus.textContent = "Dipesan";
+
+        const time = slot.bookingTime;
+
+        entryTime.textContent = time
+            ? new Date(time).toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false
+            })
+            : "--:--";
+
+        securityStatus.textContent = "Menunggu";
+
+        message.textContent = "Slot 1 sedang dalam masa booking.";
+
+    } else if (slot.status === "terisi") {
+
+        lockStatus.textContent = "Terisi";
+
+        const time = slot.parkedAt || slot.bookingTime;
+
+        entryTime.textContent = time
+            ? new Date(time).toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false
+            })
+            : "--:--";
+
+        securityStatus.textContent = "Aman";
+
+        message.textContent = "Sepeda sedang berada di Slot 1.";
+
     }
-
-    element.textContent = userSlot.id;
-
-    lockStatus.textContent =
-        userSlot.status === "booked"
-            ? "Dipesan"
-            : "Terisi";
-
-    const time = userSlot.parkedAt || userSlot.bookingTime;
-
-    entryTime.textContent = time
-        ? new Date(time).toLocaleTimeString("id-ID", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false
-        })
-        : "--:--";
-
-    securityStatus.textContent =
-        userSlot.status === "terisi"
-            ? "Aman"
-            : "Menunggu";
-
-    message.textContent = "ID Pengguna: " + userID;
 
 }
 
@@ -248,7 +218,6 @@ function updateStatus() {
 /* =====================================
    6. KETERSEDIAAN SLOT
 ===================================== */
-
 
 function displaySlots() {
 
@@ -307,6 +276,7 @@ function displaySlots() {
 
 }
 
+
 /* =====================================
    7. MENAMPILKAN SLOT KOSONG
 ===================================== */
@@ -322,7 +292,8 @@ function displayAvailableSlots() {
     container.innerHTML = "";
 
     const availableSlots = slots.filter(
-    slot => Number(slot.id) === 1 &&
+        slot =>
+            Number(slot.id) === 1 &&
             slot.status === "kosong"
     );
 
@@ -330,7 +301,7 @@ function displayAvailableSlots() {
 
         container.innerHTML = `
             <p class="no-available-slot">
-                Maaf, semua slot sudah terisi atau booked.
+                Maaf, Slot 1 sedang tidak tersedia.
             </p>
         `;
 
@@ -345,9 +316,7 @@ function displayAvailableSlots() {
         button.textContent = "Slot " + slot.id;
 
         button.onclick = function() {
-
             bookSelectedSlot(slot.id);
-
         };
 
         container.appendChild(button);
@@ -355,6 +324,7 @@ function displayAvailableSlots() {
     });
 
 }
+
 
 /* =====================================
    8. PROSES BOOKING SLOT
@@ -365,23 +335,9 @@ async function bookSelectedSlot(id) {
     if (!firebaseReady || bookingInProgress) return;
 
     if (Number(id) !== 1) {
-    alert("Saat ini hanya Slot 1 yang tersedia.");
-    return;
-    }
 
-    let userID = sessionStorage.getItem("userID");
-
-    if (!userID) {
-
-        userID = prompt("Masukkan ID pengguna Anda:");
-
-        if (!userID || userID.trim() === "") {
-            return;
-        }
-
-        userID = userID.trim();
-
-        sessionStorage.setItem("userID", userID);
+        alert("Saat ini hanya Slot 1 yang tersedia.");
+        return;
 
     }
 
@@ -405,7 +361,8 @@ async function bookSelectedSlot(id) {
                 const slots = normalizeSlots(currentData);
                 const now = Date.now();
 
-                // Menghapus booking yang sudah kedaluwarsa.
+                // Menghapus booking kedaluwarsa.
+
                 slots.forEach(slot => {
 
                     if (
@@ -416,35 +373,23 @@ async function bookSelectedSlot(id) {
 
                         slot.status = "kosong";
 
-                        delete slot.userID;
                         delete slot.pin;
                         delete slot.bookingTime;
                         delete slot.expiresAt;
+                        delete slot.userID;
 
                     }
 
                 });
 
-                // Memeriksa booking aktif pengguna.
-                const existingBooking = slots.find(slot =>
-                    slot.userID === userID &&
-                    (
-                        slot.status === "booked" ||
-                        slot.status === "terisi"
-                    )
-                );
+                // Menghapus data ID pengguna lama.
 
-                if (existingBooking) {
-
-                    failureReason =
-                        "Anda sudah memiliki slot aktif: Slot " +
-                        existingBooking.id;
-
-                    return;
-
-                }
+                slots.forEach(slot => {
+                    delete slot.userID;
+                });
 
                 // Memeriksa slot pilihan.
+
                 const selected = slots.find(
                     slot => Number(slot.id) === Number(id)
                 );
@@ -452,17 +397,17 @@ async function bookSelectedSlot(id) {
                 if (!selected || selected.status !== "kosong") {
 
                     failureReason =
-                        "Maaf, slot sudah tidak tersedia!";
+                        "Maaf, Slot 1 sudah tidak tersedia!";
 
                     return;
 
                 }
 
-                // Membuat PIN.
+                // Membuat PIN otomatis.
+
                 const pin = generatePIN(slots);
 
                 selected.status = "booked";
-                selected.userID = userID;
                 selected.pin = pin;
                 selected.bookingTime = now;
                 selected.expiresAt = now + BOOKING_DURATION;
@@ -489,7 +434,6 @@ async function bookSelectedSlot(id) {
 
         const committedBooking = committedSlots.find(slot =>
             Number(slot.id) === Number(id) &&
-            slot.userID === userID &&
             slot.status === "booked"
         );
 
@@ -537,8 +481,6 @@ function displayBookingSuccess() {
 
     if (!countdown || !firebaseReady) return;
 
-    const userID = sessionStorage.getItem("userID");
-
     const slotID = Number(
         sessionStorage.getItem("lastBookingSlot")
     );
@@ -551,7 +493,6 @@ function displayBookingSuccess() {
 
     const booking = getSlots().find(slot =>
         Number(slot.id) === slotID &&
-        slot.userID === userID &&
         slot.status === "booked"
     );
 
@@ -559,7 +500,7 @@ function displayBookingSuccess() {
 
         successSlot.textContent = "-";
         successPIN.textContent = "-";
-        successStatus.textContent = "Kedaluwarsa";
+        successStatus.textContent = "Tidak ditemukan";
 
         countdown.textContent = "00 : 00 : 00";
 
@@ -707,16 +648,16 @@ async function startApp() {
 
     try {
 
-        // Login anonim.
+        // Login anonim Firebase.
+
         await signInAnonymously(auth);
 
         // Membuat data slot awal jika belum tersedia.
+
         await runTransaction(slotsRef, currentData => {
 
             if (currentData === null) {
-
                 return createInitialSlots();
-
             }
 
             return currentData;
@@ -724,6 +665,7 @@ async function startApp() {
         });
 
         // Mendengarkan perubahan Firebase secara real-time.
+
         onValue(
             slotsRef,
 
@@ -751,7 +693,8 @@ async function startApp() {
             }
         );
 
-        // Memeriksa booking yang sudah melewati batas waktu.
+        // Memeriksa booking kedaluwarsa.
+
         setInterval(() => {
 
             releaseExpiredBookings();
