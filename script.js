@@ -1,3 +1,4 @@
+
 /* =====================================
    1. PENGATURAN FIREBASE
 ===================================== */
@@ -16,18 +17,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
 
 import {
-    getMessaging,
-    getToken,
-    isSupported
-} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-messaging.js";
-
-import {
     getDatabase,
     ref,
     runTransaction,
     onValue,
-    
-set
+    set
 } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-database.js";
 
 
@@ -66,7 +60,6 @@ let alertsInitialized = false;
 ===================================== */
 
 function createInitialSlots() {
-
     const slots = [];
 
     for (let i = 1; i <= TOTAL_SLOTS; i++) {
@@ -81,7 +74,6 @@ function createInitialSlots() {
 
 
 function normalizeSlots(data) {
-
     if (!data) {
         return createInitialSlots();
     }
@@ -99,7 +91,6 @@ function normalizeSlots(data) {
         .sort((a, b) => Number(a.id) - Number(b.id));
 
     for (let i = 1; i <= TOTAL_SLOTS; i++) {
-
         const exists = slots.some(
             slot => Number(slot.id) === i
         );
@@ -128,11 +119,9 @@ function getSlots() {
 ===================================== */
 
 function generatePIN(slots) {
-
     let pin;
 
     do {
-
         pin = String(
             Math.floor(1000 + Math.random() * 9000)
         );
@@ -165,7 +154,6 @@ window.checkID = checkID;
 ===================================== */
 
 function updateStatus() {
-
     const element = document.getElementById("slotStatus");
 
     if (!element || !firebaseReady) return;
@@ -183,15 +171,12 @@ function updateStatus() {
     element.textContent = slot.id;
 
     if (slot.status === "kosong") {
-
         lockStatus.textContent = "Kosong";
         entryTime.textContent = "--:--";
         securityStatus.textContent = "-";
-
         message.textContent = "Slot 1 belum digunakan.";
 
     } else if (slot.status === "booked") {
-
         lockStatus.textContent = "Dipesan";
 
         const time = slot.bookingTime;
@@ -205,11 +190,9 @@ function updateStatus() {
             : "--:--";
 
         securityStatus.textContent = "Menunggu";
-
         message.textContent = "Slot 1 sedang dalam masa booking.";
 
     } else if (slot.status === "terisi") {
-
         lockStatus.textContent = "Terisi";
 
         const time = slot.parkedAt || slot.bookingTime;
@@ -223,11 +206,8 @@ function updateStatus() {
             : "--:--";
 
         securityStatus.textContent = "Aman";
-
         message.textContent = "Sepeda sedang berada di Slot 1.";
-
     }
-
 }
 
 
@@ -236,7 +216,6 @@ function updateStatus() {
 ===================================== */
 
 function displaySlots() {
-
     const container = document.getElementById("slotList");
 
     if (!container || !firebaseReady) return;
@@ -246,30 +225,24 @@ function displaySlots() {
     container.innerHTML = "";
 
     slots.forEach(slot => {
-
         let statusText = "";
         let statusClass = "";
 
         if (Number(slot.id) !== 1) {
-
             statusText = "Tidak Tersedia";
             statusClass = "occupied";
 
         } else if (slot.status === "kosong") {
-
             statusText = "Kosong";
             statusClass = "empty";
 
         } else if (slot.status === "booked") {
-
             statusText = "Booked";
             statusClass = "booked";
 
         } else if (slot.status === "terisi") {
-
             statusText = "Terisi";
             statusClass = "occupied";
-
         }
 
         const item = document.createElement("div");
@@ -287,9 +260,7 @@ function displaySlots() {
         item.appendChild(status);
 
         container.appendChild(item);
-
     });
-
 }
 
 
@@ -298,7 +269,6 @@ function displaySlots() {
 ===================================== */
 
 function displayAvailableSlots() {
-
     const container = document.getElementById("availableSlots");
 
     if (!container || !firebaseReady) return;
@@ -314,7 +284,6 @@ function displayAvailableSlots() {
     );
 
     if (availableSlots.length === 0) {
-
         container.innerHTML = `
             <p class="no-available-slot">
                 Maaf, Slot 1 sedang tidak tersedia.
@@ -325,7 +294,6 @@ function displayAvailableSlots() {
     }
 
     availableSlots.forEach(slot => {
-
         const button = document.createElement("button");
 
         button.className = "available-slot-button";
@@ -336,9 +304,7 @@ function displayAvailableSlots() {
         };
 
         container.appendChild(button);
-
     });
-
 }
 
 
@@ -347,14 +313,11 @@ function displayAvailableSlots() {
 ===================================== */
 
 async function bookSelectedSlot(id) {
-
     if (!firebaseReady || bookingInProgress) return;
 
     if (Number(id) !== 1) {
-
         alert("Saat ini hanya Slot 1 yang tersedia.");
         return;
-
     }
 
     const confirmation = confirm(
@@ -369,58 +332,46 @@ async function bookSelectedSlot(id) {
     let failureReason = "";
 
     try {
-
         const result = await runTransaction(
             slotsRef,
             currentData => {
-
                 const slots = normalizeSlots(currentData);
                 const now = Date.now();
 
                 // Menghapus booking kedaluwarsa.
-
                 slots.forEach(slot => {
-
                     if (
                         slot.status === "booked" &&
                         slot.expiresAt &&
                         now >= Number(slot.expiresAt)
                     ) {
-
                         slot.status = "kosong";
 
                         delete slot.pin;
                         delete slot.bookingTime;
                         delete slot.expiresAt;
                         delete slot.userID;
-
                     }
-
                 });
 
                 // Menghapus data ID pengguna lama.
-
                 slots.forEach(slot => {
                     delete slot.userID;
                 });
 
                 // Memeriksa slot pilihan.
-
                 const selected = slots.find(
                     slot => Number(slot.id) === Number(id)
                 );
 
                 if (!selected || selected.status !== "kosong") {
-
                     failureReason =
                         "Maaf, Slot 1 sudah tidak tersedia!";
 
                     return;
-
                 }
 
                 // Membuat PIN otomatis.
-
                 const pin = generatePIN(slots);
 
                 selected.status = "booked";
@@ -429,19 +380,16 @@ async function bookSelectedSlot(id) {
                 selected.expiresAt = now + BOOKING_DURATION;
 
                 return slots;
-
             }
         );
 
         if (!result.committed) {
-
             alert(
                 failureReason ||
                 "Booking gagal. Silakan coba lagi."
             );
 
             return;
-
         }
 
         const committedSlots = normalizeSlots(
@@ -454,13 +402,11 @@ async function bookSelectedSlot(id) {
         );
 
         if (!committedBooking) {
-
             alert(
                 "Booking belum berhasil. Silakan periksa kembali slot."
             );
 
             return;
-
         }
 
         sessionStorage.setItem(
@@ -471,7 +417,6 @@ async function bookSelectedSlot(id) {
         window.location.href = "booking-berhasil.html";
 
     } catch (error) {
-
         console.error("Kesalahan booking:", error);
 
         alert(
@@ -479,11 +424,8 @@ async function bookSelectedSlot(id) {
         );
 
     } finally {
-
         bookingInProgress = false;
-
     }
-
 }
 
 
@@ -492,7 +434,6 @@ async function bookSelectedSlot(id) {
 ===================================== */
 
 function displayBookingSuccess() {
-
     const countdown = document.getElementById("countdown");
 
     if (!countdown || !firebaseReady) return;
@@ -513,7 +454,6 @@ function displayBookingSuccess() {
     );
 
     if (!booking) {
-
         successSlot.textContent = "-";
         successPIN.textContent = "-";
         successStatus.textContent = "Tidak ditemukan";
@@ -524,7 +464,6 @@ function displayBookingSuccess() {
             "Booking tidak ditemukan atau sudah berakhir.";
 
         return;
-
     }
 
     successSlot.textContent = booking.id;
@@ -534,7 +473,6 @@ function displayBookingSuccess() {
     const remaining = Number(booking.expiresAt) - Date.now();
 
     if (remaining <= 0) {
-
         countdown.textContent = "00 : 00 : 00";
         successStatus.textContent = "Kedaluwarsa";
 
@@ -542,7 +480,6 @@ function displayBookingSuccess() {
             "Waktu habis. Slot kembali tersedia.";
 
         return;
-
     }
 
     const hours = Math.floor(remaining / 3600000);
@@ -562,7 +499,6 @@ function displayBookingSuccess() {
 
     message.textContent =
         "Segera gunakan slot sebelum waktu habis.";
-
 }
 
 
@@ -571,7 +507,6 @@ function displayBookingSuccess() {
 ===================================== */
 
 async function releaseExpiredBookings() {
-
     if (!firebaseReady || expiryInProgress) return;
 
     const now = Date.now();
@@ -587,21 +522,17 @@ async function releaseExpiredBookings() {
     expiryInProgress = true;
 
     try {
-
         await runTransaction(slotsRef, currentData => {
-
             const slots = normalizeSlots(currentData);
 
             let changed = false;
 
             slots.forEach(slot => {
-
                 if (
                     slot.status === "booked" &&
                     slot.expiresAt &&
                     now >= Number(slot.expiresAt)
                 ) {
-
                     slot.status = "kosong";
 
                     delete slot.userID;
@@ -610,9 +541,7 @@ async function releaseExpiredBookings() {
                     delete slot.expiresAt;
 
                     changed = true;
-
                 }
-
             });
 
             if (changed) {
@@ -620,22 +549,17 @@ async function releaseExpiredBookings() {
             }
 
             return;
-
         });
 
     } catch (error) {
-
         console.error(
             "Gagal memperbarui booking kedaluwarsa:",
             error
         );
 
     } finally {
-
         expiryInProgress = false;
-
     }
-
 }
 
 
@@ -644,15 +568,10 @@ async function releaseExpiredBookings() {
 ===================================== */
 
 function refreshPage() {
-
     updateStatus();
-
     displaySlots();
-
     displayAvailableSlots();
-
     displayBookingSuccess();
-
 }
 
 
@@ -661,18 +580,14 @@ function refreshPage() {
 ===================================== */
 
 function listenForAlerts() {
-
     onValue(
-
         alertsRef,
 
         snapshot => {
-
             // Saat pertama kali terhubung, catat
             // semua peringatan lama agar tidak dikirim ulang.
 
             if (!alertsInitialized) {
-
                 snapshot.forEach(child => {
                     knownAlertIds.add(child.key);
                 });
@@ -685,13 +600,10 @@ function listenForAlerts() {
             }
 
             // Memeriksa peringatan baru dari ESP32.
-
             snapshot.forEach(child => {
-
                 const alertId = child.key;
 
                 // Abaikan peringatan yang sudah pernah diproses.
-
                 if (knownAlertIds.has(alertId)) {
                     return;
                 }
@@ -706,12 +618,10 @@ function listenForAlerts() {
                 console.log("Peringatan baru:", message);
 
                 // Menampilkan notifikasi browser.
-
                 if (
                     "Notification" in window &&
                     Notification.permission === "granted"
                 ) {
-
                     const notification = new Notification(
                         "Peringatan SiBike Lock!",
                         {
@@ -726,28 +636,20 @@ function listenForAlerts() {
                     };
 
                 } else {
-
                     console.warn(
                         "Izin notifikasi browser belum diberikan."
                     );
-
                 }
-
             });
-
         },
 
         error => {
-
             console.error(
                 "Gagal memantau peringatan sensor:",
                 error
             );
-
         }
-
     );
-
 }
 
 
@@ -756,43 +658,32 @@ function listenForAlerts() {
 ===================================== */
 
 async function startApp() {
-
     try {
-
         // Login anonim Firebase.
-
         await signInAnonymously(auth);
 
         // Membuat data slot awal jika belum tersedia.
-
         await runTransaction(slotsRef, currentData => {
-
             if (currentData === null) {
                 return createInitialSlots();
             }
 
             return currentData;
-
         });
 
         // Mendengarkan perubahan data slot secara realtime.
-
         onValue(
-
             slotsRef,
 
             snapshot => {
-
                 slotsCache = normalizeSlots(snapshot.val());
 
                 firebaseReady = true;
 
                 refreshPage();
-
             },
 
             error => {
-
                 console.error(
                     "Gagal membaca data Firebase:",
                     error
@@ -801,27 +692,19 @@ async function startApp() {
                 alert(
                     "Tidak dapat mengambil data slot dari server."
                 );
-
             }
-
         );
 
         // Mengaktifkan pemantauan peringatan sensor.
-
         listenForAlerts();
 
         // Memeriksa booking kedaluwarsa.
-
         setInterval(() => {
-
             releaseExpiredBookings();
-
             refreshPage();
-
         }, 1000);
 
     } catch (error) {
-
         console.error(
             "Gagal menghubungkan Firebase:",
             error
@@ -831,9 +714,7 @@ async function startApp() {
             "Koneksi ke Firebase gagal. " +
             "Periksa koneksi internet dan pengaturan Firebase."
         );
-
     }
-
 }
 
 
@@ -842,35 +723,25 @@ async function startApp() {
 ===================================== */
 
 async function enableNotifications() {
-
     try {
-
         if (!(await isSupported())) {
-
             alert("Browser tidak mendukung notifikasi Firebase.");
-
             return;
-
         }
 
         if (!auth.currentUser) {
-
             alert(
                 "Firebase masih menghubungkan akun. Coba lagi sebentar."
             );
 
             return;
-
         }
 
         const permission = await Notification.requestPermission();
 
         if (permission !== "granted") {
-
             alert("Izin notifikasi belum diberikan.");
-
             return;
-
         }
 
         const registration = await navigator.serviceWorker.register(
@@ -880,17 +751,12 @@ async function enableNotifications() {
         const messaging = getMessaging(app);
 
         const token = await getToken(messaging, {
-
             vapidKey: "BIhPyRw1NcSEBTt6qbpp22FVD_estPPAA0MlvLn5YVSIdRv7SWbLS6AfBuhTJCg45m-cepN6Ut0i3GEVxKN9VZQ",
-
             serviceWorkerRegistration: registration
-
         });
 
         if (!token) {
-
             throw new Error("Token notifikasi gagal dibuat.");
-
         }
 
         await set(
@@ -904,7 +770,6 @@ async function enableNotifications() {
         alert("Notifikasi berhasil diaktifkan!");
 
     } catch (error) {
-
         console.error(
             "Gagal mengaktifkan notifikasi:",
             error
@@ -913,9 +778,7 @@ async function enableNotifications() {
         alert(
             "Gagal mengaktifkan notifikasi: " + error.message
         );
-
     }
-
 }
 
 
@@ -933,61 +796,3 @@ document
 ===================================== */
 
 startApp();
-
-// =====================================
-// 14. MENGAKTIFKAN NOTIFIKASI
-// =====================================
-
-async function enableNotifications() {
-    try {
-        if (!(await isSupported())) {
-            alert("Browser tidak mendukung notifikasi Firebase.");
-            return;
-        }
-
-        if (!auth.currentUser) {
-            alert("Firebase masih menghubungkan akun. Coba lagi sebentar.");
-            return;
-        }
-
-        const permission = await Notification.requestPermission();
-
-        if (permission !== "granted") {
-            alert("Izin notifikasi belum diberikan.");
-            return;
-        }
-
-       const registration = await navigator.serviceWorker.register(
-    "./firebase-messaging-sw.js"
-);
-
-// Menunggu Service Worker aktif
-const activeRegistration = await navigator.serviceWorker.ready;
-
-const messaging = getMessaging(app);
-
-        const token = await getToken(messaging, {
-            vapidKey: "BIhPyRw1NcSEBTt6qbpp22FVD_estPPAA0MlvLn5YVSIdRv7SWbLS6AfBuhTJCg45m-cepN6Ut0i3GEVxKN9VZQ",
-            serviceWorkerRegistration: activeRegistration
-        });
-
-        if (!token) {
-            throw new Error("Token notifikasi gagal dibuat.");
-        }
-
-        await set(ref(db, `notificationTokens/${auth.currentUser.uid}`), {
-            token: token,
-            createdAt: Date.now()
-        });
-
-        alert("Notifikasi berhasil diaktifkan!");
-
-    } catch (error) {
-        console.error("Gagal mengaktifkan notifikasi:", error);
-        alert("Gagal mengaktifkan notifikasi: " + error.message);
-    }
-}
-
-// Menghubungkan tombol notifikasi
-document.getElementById("notificationButton")
-    ?.addEventListener("click", enableNotifications);
