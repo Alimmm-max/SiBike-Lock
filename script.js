@@ -5,6 +5,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-app.js";
 
 import {
+    getMessaging,
+    getToken,
+    isSupported
+} from "https://www.gstatic.com/firebasejs/13.3.0/firebase-messaging.js";
+
+import {
     getAuth,
     signInAnonymously
 } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-auth.js";
@@ -20,7 +26,8 @@ import {
     ref,
     runTransaction,
     onValue,
-   set
+    
+set
 } from "https://www.gstatic.com/firebasejs/13.3.0/firebase-database.js";
 
 
@@ -40,12 +47,18 @@ const TOTAL_SLOTS = 3;
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
+
 const slotsRef = ref(db, "slots");
+const alertsRef = ref(db, "alerts");
 
 let slotsCache = [];
 let firebaseReady = false;
 let expiryInProgress = false;
 let bookingInProgress = false;
+
+// Variabel pemantauan notifikasi
+let knownAlertIds = new Set();
+let alertsInitialized = false;
 
 
 /* =====================================
@@ -138,9 +151,6 @@ function generatePIN(slots) {
 /* =====================================
    4. NAVIGASI HALAMAN STATUS
 ===================================== */
-
-// Kompatibilitas dengan tombol HTML lama.
-// Tidak meminta ID pengguna lagi.
 
 function checkID() {
     window.location.href = "status.html";
@@ -647,7 +657,102 @@ function refreshPage() {
 
 
 /* =====================================
-   12. MENGHUBUNGKAN KE FIREBASE
+   12. MEMANTAU PERINGATAN SENSOR
+===================================== */
+
+function listenForAlerts() {
+
+    onValue(
+
+        alertsRef,
+
+        snapshot => {
+
+            // Saat pertama kali terhubung, catat
+            // semua peringatan lama agar tidak dikirim ulang.
+
+            if (!alertsInitialized) {
+
+                snapshot.forEach(child => {
+                    knownAlertIds.add(child.key);
+                });
+
+                alertsInitialized = true;
+
+                console.log("Pemantauan peringatan sensor aktif.");
+
+                return;
+            }
+
+            // Memeriksa peringatan baru dari ESP32.
+
+            snapshot.forEach(child => {
+
+                const alertId = child.key;
+
+                // Abaikan peringatan yang sudah pernah diproses.
+
+                if (knownAlertIds.has(alertId)) {
+                    return;
+                }
+
+                knownAlertIds.add(alertId);
+
+                const alertData = child.val();
+
+                const message = alertData?.message ||
+                    "Terdeteksi getaran mencurigakan pada sepeda!";
+
+                console.log("Peringatan baru:", message);
+
+                // Menampilkan notifikasi browser.
+
+                if (
+                    "Notification" in window &&
+                    Notification.permission === "granted"
+                ) {
+
+                    const notification = new Notification(
+                        "Peringatan SiBike Lock!",
+                        {
+                            body: message,
+                            tag: alertId
+                        }
+                    );
+
+                    notification.onclick = function() {
+                        window.focus();
+                        notification.close();
+                    };
+
+                } else {
+
+                    console.warn(
+                        "Izin notifikasi browser belum diberikan."
+                    );
+
+                }
+
+            });
+
+        },
+
+        error => {
+
+            console.error(
+                "Gagal memantau peringatan sensor:",
+                error
+            );
+
+        }
+
+    );
+
+}
+
+
+/* =====================================
+   13. MENGHUBUNGKAN KE FIREBASE
 ===================================== */
 
 async function startApp() {
@@ -670,9 +775,10 @@ async function startApp() {
 
         });
 
-        // Mendengarkan perubahan Firebase secara real-time.
+        // Mendengarkan perubahan data slot secara realtime.
 
         onValue(
+
             slotsRef,
 
             snapshot => {
@@ -697,7 +803,12 @@ async function startApp() {
                 );
 
             }
+
         );
+
+        // Mengaktifkan pemantauan peringatan sensor.
+
+        listenForAlerts();
 
         // Memeriksa booking kedaluwarsa.
 
@@ -727,7 +838,98 @@ async function startApp() {
 
 
 /* =====================================
-   13. MENJALANKAN APLIKASI
+   14. MENGAKTIFKAN NOTIFIKASI FCM
+===================================== */
+
+async function enableNotifications() {
+
+    try {
+
+        if (!(await isSupported())) {
+
+            alert("Browser tidak mendukung notifikasi Firebase.");
+
+            return;
+
+        }
+
+        if (!auth.currentUser) {
+
+            alert(
+                "Firebase masih menghubungkan akun. Coba lagi sebentar."
+            );
+
+            return;
+
+        }
+
+        const permission = await Notification.requestPermission();
+
+        if (permission !== "granted") {
+
+            alert("Izin notifikasi belum diberikan.");
+
+            return;
+
+        }
+
+        const registration = await navigator.serviceWorker.register(
+            "./firebase-messaging-sw.js"
+        );
+
+        const messaging = getMessaging(app);
+
+        const token = await getToken(messaging, {
+
+            vapidKey: "BIhPyRw1NcSEBTt6qbpp22FVD_estPPAA0MlvLn5YVSIdRv7SWbLS6AfBuhTJCg45m-cepN6Ut0i3GEVxKN9VZQ",
+
+            serviceWorkerRegistration: registration
+
+        });
+
+        if (!token) {
+
+            throw new Error("Token notifikasi gagal dibuat.");
+
+        }
+
+        await set(
+            ref(db, `notificationTokens/${auth.currentUser.uid}`),
+            {
+                token: token,
+                createdAt: Date.now()
+            }
+        );
+
+        alert("Notifikasi berhasil diaktifkan!");
+
+    } catch (error) {
+
+        console.error(
+            "Gagal mengaktifkan notifikasi:",
+            error
+        );
+
+        alert(
+            "Gagal mengaktifkan notifikasi: " + error.message
+        );
+
+    }
+
+}
+
+
+/* =====================================
+   15. TOMBOL AKTIFKAN NOTIFIKASI
+===================================== */
+
+document
+    .getElementById("notificationButton")
+    ?.addEventListener("click", enableNotifications);
+
+
+/* =====================================
+   16. MENJALANKAN APLIKASI
 ===================================== */
 
 startApp();
