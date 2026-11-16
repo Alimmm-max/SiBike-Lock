@@ -249,6 +249,7 @@ function updateStatus() {
    6. KETERSEDIAAN SLOT
 ===================================== */
 
+
 function displaySlots() {
 
     const container = document.getElementById("slotList");
@@ -264,7 +265,12 @@ function displaySlots() {
         let statusText = "";
         let statusClass = "";
 
-        if (slot.status === "kosong") {
+        if (Number(slot.id) !== 1) {
+
+            statusText = "Tidak Tersedia";
+            statusClass = "occupied";
+
+        } else if (slot.status === "kosong") {
 
             statusText = "Kosong";
             statusClass = "empty";
@@ -301,7 +307,6 @@ function displaySlots() {
 
 }
 
-
 /* =====================================
    7. MENAMPILKAN SLOT KOSONG
 ===================================== */
@@ -317,7 +322,8 @@ function displayAvailableSlots() {
     container.innerHTML = "";
 
     const availableSlots = slots.filter(
-        slot => slot.status === "kosong"
+    slot => Number(slot.id) === 1 &&
+            slot.status === "kosong"
     );
 
     if (availableSlots.length === 0) {
@@ -350,7 +356,6 @@ function displayAvailableSlots() {
 
 }
 
-
 /* =====================================
    8. PROSES BOOKING SLOT
 ===================================== */
@@ -358,6 +363,11 @@ function displayAvailableSlots() {
 async function bookSelectedSlot(id) {
 
     if (!firebaseReady || bookingInProgress) return;
+
+    if (Number(id) !== 1) {
+    alert("Saat ini hanya Slot 1 yang tersedia.");
+    return;
+    }
 
     let userID = sessionStorage.getItem("userID");
 
