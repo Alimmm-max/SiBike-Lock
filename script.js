@@ -755,15 +755,18 @@ async function enableNotifications() {
             return;
         }
 
-        const registration = await navigator.serviceWorker.register(
-            "./firebase-messaging-sw.js"
-        );
+       const registration = await navigator.serviceWorker.register(
+    "./firebase-messaging-sw.js"
+);
 
-        const messaging = getMessaging(app);
+// Menunggu Service Worker aktif
+const activeRegistration = await navigator.serviceWorker.ready;
+
+const messaging = getMessaging(app);
 
         const token = await getToken(messaging, {
             vapidKey: "BIhPyRw1NcSEBTt6qbpp22FVD_estPPAA0MlvLn5YVSIdRv7SWbLS6AfBuhTJCg45m-cepN6Ut0i3GEVxKN9VZQ",
-            serviceWorkerRegistration: registration
+            serviceWorkerRegistration: activeRegistration
         });
 
         if (!token) {
