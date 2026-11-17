@@ -1,18 +1,21 @@
+
 importScripts("https://www.gstatic.com/firebasejs/13.3.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/13.3.0/firebase-messaging-compat.js");
 
+// Konfigurasi Firebase
 firebase.initializeApp({
-    apiKey: "AIzaSyChyxcfr9pSuPTxEYLALFVNss2Ojm35tsM",
-    authDomain: "sibike-lock.firebaseapp.com",
-    databaseURL: "https://sibike-lock-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "sibike-lock",
-    storageBucket: "sibike-lock.firebasestorage.app",
-    messagingSenderId: "934456681964",
-    appId: "1:934456681964:web:ece74a134e322da3520cc9"
+    apiKey: "SALIN_DARI_SCRIPT_JS",
+    authDomain: "SALIN_DARI_SCRIPT_JS",
+    databaseURL: "SALIN_DARI_SCRIPT_JS",
+    projectId: "SALIN_DARI_SCRIPT_JS",
+    storageBucket: "SALIN_DARI_SCRIPT_JS",
+    messagingSenderId: "SALIN_DARI_SCRIPT_JS",
+    appId: "SALIN_DARI_SCRIPT_JS"
 });
 
 const messaging = firebase.messaging();
 
+// Menangani notifikasi ketika website tidak dibuka
 messaging.onBackgroundMessage((payload) => {
     const notificationTitle =
         payload.notification?.title || "SiBike Lock";

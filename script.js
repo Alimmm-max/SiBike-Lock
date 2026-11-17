@@ -661,9 +661,6 @@ function listenForAlerts() {
     );
 }
 
-
-
-
 /* =====================================
    13. MENGHUBUNGKAN KE FIREBASE
 ===================================== */
